@@ -200,7 +200,7 @@ func main() {
 	// data.Data.Attributes.PriceChangePercentage.M5,
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"5M\n%s\n%s/%s",
+			"5M\n$%s\n%s/%s",
 			Comma(m5Volume),
 			Comma(int64(data.Data.Attributes.Transactions.M5.Buys)),
 			Comma(int64(data.Data.Attributes.Transactions.M5.Sells)),
@@ -216,9 +216,9 @@ func main() {
 
 	m5PricePercentageColor := color.RGBA{128, 128, 128, 255}
 	if m5PricePercentage > 0 {
-		m5PricePercentageColor = color.RGBA{0, 255, 0, 255}
+		m5PricePercentageColor = color.RGBA{126, 211, 33, 255}
 	} else if m5PricePercentage < 0 {
-		m5PricePercentageColor = color.RGBA{227, 28, 37, 255}
+		m5PricePercentageColor = color.RGBA{208, 2, 27, 255}
 	}
 
 	dc.SetColor(m5PricePercentageColor)
@@ -234,7 +234,7 @@ func main() {
 	// data.Data.Attributes.PriceChangePercentage.M5,
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"1H\n%s\n%s/%s",
+			"1H\n$%s\n%s/%s",
 			Comma(h1Volume),
 			Comma(int64(data.Data.Attributes.Transactions.H1.Buys)),
 			Comma(int64(data.Data.Attributes.Transactions.H1.Sells)),
@@ -250,9 +250,9 @@ func main() {
 
 	h1PricePercentageColor := color.RGBA{128, 128, 128, 255}
 	if h1PricePercentage > 0 {
-		h1PricePercentageColor = color.RGBA{0, 255, 0, 255}
+		h1PricePercentageColor = color.RGBA{126, 211, 33, 255}
 	} else if h1PricePercentage < 0 {
-		h1PricePercentageColor = color.RGBA{227, 28, 37, 255}
+		h1PricePercentageColor = color.RGBA{208, 2, 27, 255}
 	}
 
 	dc.SetColor(h1PricePercentageColor)
@@ -268,7 +268,7 @@ func main() {
 
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"24H\n%s\n%s/%s",
+			"24H\n$%s\n%s/%s",
 			Comma(h24Volume),
 			Comma(int64(data.Data.Attributes.Transactions.H24.Buys)),
 			Comma(int64(data.Data.Attributes.Transactions.H24.Sells)),
@@ -284,9 +284,9 @@ func main() {
 
 	h24PricePercentageColor := color.RGBA{128, 128, 128, 255}
 	if h24PricePercentage > 0 {
-		h24PricePercentageColor = color.RGBA{0, 255, 0, 255}
+		h24PricePercentageColor = color.RGBA{126, 211, 33, 255}
 	} else if h24PricePercentage < 0 {
-		h24PricePercentageColor = color.RGBA{227, 28, 37, 255}
+		h24PricePercentageColor = color.RGBA{208, 2, 27, 255}
 	}
 
 	dc.SetColor(h24PricePercentageColor)
