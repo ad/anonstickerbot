@@ -1,6 +1,6 @@
 module github.com/ad/anonstickerbot
 
-go 1.22.1
+go 1.21
 
 require (
 	github.com/fogleman/gg v1.3.0

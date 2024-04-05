@@ -66,7 +66,22 @@ func main() {
 		}, s.SendResult)
 	}
 
-	updateTicker := time.NewTicker(60 * time.Second)
+	err = updateSticker(
+		s.Bot,
+		stickerSetName,
+		conf.DATA_URL,
+		conf.IMG_IN_PATH,
+		conf.IMG_OUT_PATH,
+		me.Username,
+		conf.TelegramAdminIDsList[0],
+	)
+	if err != nil {
+		fmt.Println(err)
+
+		// return
+	}
+
+	updateTicker := time.NewTicker(time.Duration(conf.UPDATE_DELAY) * time.Second)
 	for {
 		select {
 		case <-updateTicker.C:
