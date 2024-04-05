@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fogleman/gg"
@@ -118,19 +119,22 @@ func main() {
 
 	fmt.Println("-------------------------------------")
 
+	m5Volume := int64(0)
 	m5VolumeFloat, err := strconv.ParseFloat(data.Data.Attributes.VolumeUsd.M5, 64)
-	if err != nil {
-		m5VolumeFloat = 0
+	if err == nil {
+		m5Volume = int64(m5VolumeFloat)
 	}
 
+	h1Volume := int64(0)
 	h1VolumeFloat, err := strconv.ParseFloat(data.Data.Attributes.VolumeUsd.H1, 64)
-	if err != nil {
-		h1VolumeFloat = 0
+	if err == nil {
+		h1Volume = int64(h1VolumeFloat)
 	}
 
+	h24Volume := int64(0)
 	h24VolumeFloat, err := strconv.ParseFloat(data.Data.Attributes.VolumeUsd.H24, 64)
-	if err != nil {
-		h24VolumeFloat = 0.0
+	if err == nil {
+		h24Volume = int64(h24VolumeFloat)
 	}
 
 	m5PricePercentage, err := strconv.ParseFloat(data.Data.Attributes.PriceChangePercentage.M5, 64)
@@ -153,10 +157,10 @@ func main() {
 	fmt.Printf("Quote token price USD: %s\n", data.Data.Attributes.QuoteTokenPriceUsd)
 	fmt.Printf("Base token price quote token: %s\n", data.Data.Attributes.BaseTokenPriceQuoteToken)
 	fmt.Printf("Quote token price base token: %s\n", data.Data.Attributes.QuoteTokenPriceBaseToken)
-	fmt.Printf("Price change percentage M5: %.2f%%, volume %.2f, buy %d/sell %d\n", m5PricePercentage, m5VolumeFloat, data.Data.Attributes.Transactions.M5.Buys, data.Data.Attributes.Transactions.M5.Sells)
-	fmt.Printf("Price change percentage H1: %.2f%%, volume %.2f, buy %d/sell %d\n", h1PricePercentage, h1VolumeFloat, data.Data.Attributes.Transactions.H1.Buys, data.Data.Attributes.Transactions.H1.Sells)
+	fmt.Printf("Price change percentage M5: %.2f%%, volume %d, buy %d/sell %d\n", m5PricePercentage, m5Volume, data.Data.Attributes.Transactions.M5.Buys, data.Data.Attributes.Transactions.M5.Sells)
+	fmt.Printf("Price change percentage H1: %.2f%%, volume %d, buy %d/sell %d\n", h1PricePercentage, h1Volume, data.Data.Attributes.Transactions.H1.Buys, data.Data.Attributes.Transactions.H1.Sells)
 	// fmt.Printf("Price change percentage H6: %.2f%%, volume %.2f \n", data.Data.Attributes.PriceChangePercentage.H6, data.Data.Attributes.VolumeUsd.H6)
-	fmt.Printf("Price change percentage H24: %.2f%%, volume %.2f, buy %d/sell %d\n", h24PricePercentage, h24VolumeFloat, data.Data.Attributes.Transactions.H24.Buys, data.Data.Attributes.Transactions.H24.Sells)
+	fmt.Printf("Price change percentage H24: %.2f%%, volume %d, buy %d/sell %d\n", h24PricePercentage, h24Volume, data.Data.Attributes.Transactions.H24.Buys, data.Data.Attributes.Transactions.H24.Sells)
 	fmt.Printf("Reserve in USD: %s\n", data.Data.Attributes.ReserveInUsd)
 
 	inputFile, err := os.Open(IMG_IN_PATH)
@@ -177,6 +181,7 @@ func main() {
 	font, _ := truetype.Parse(goregular.TTF)
 	face18 := truetype.NewFace(font, &truetype.Options{Size: 18})
 	face24 := truetype.NewFace(font, &truetype.Options{Size: 24})
+	face26 := truetype.NewFace(font, &truetype.Options{Size: 26})
 	face32 := truetype.NewFace(font, &truetype.Options{Size: 32})
 
 	// dc.Clear()
@@ -191,13 +196,14 @@ func main() {
 	dc.SetFontFace(face18)
 	dc.DrawStringAnchored(data.Data.Attributes.BaseTokenPriceQuoteToken, 490, 54, 1, 0)
 
+	dc.SetFontFace(face26)
 	// data.Data.Attributes.PriceChangePercentage.M5,
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"5M\n%.2f\n%d/%d",
-			m5VolumeFloat,
-			data.Data.Attributes.Transactions.M5.Buys,
-			data.Data.Attributes.Transactions.M5.Sells,
+			"5M\n%s\n%s/%s",
+			Comma(m5Volume),
+			Comma(int64(data.Data.Attributes.Transactions.M5.Buys)),
+			Comma(int64(data.Data.Attributes.Transactions.M5.Sells)),
 		),
 		24,
 		140,
@@ -218,8 +224,8 @@ func main() {
 	dc.SetColor(m5PricePercentageColor)
 	dc.DrawStringAnchored(
 		fmt.Sprintf("%.2f%%", math.Abs(m5PricePercentage)),
-		54,
-		158,
+		64,
+		166,
 		0,
 		0,
 	)
@@ -228,10 +234,10 @@ func main() {
 	// data.Data.Attributes.PriceChangePercentage.M5,
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"1H\n%.2f\n%d/%d",
-			h1VolumeFloat,
-			data.Data.Attributes.Transactions.H1.Buys,
-			data.Data.Attributes.Transactions.H1.Sells,
+			"1H\n%s\n%s/%s",
+			Comma(h1Volume),
+			Comma(int64(data.Data.Attributes.Transactions.H1.Buys)),
+			Comma(int64(data.Data.Attributes.Transactions.H1.Sells)),
 		),
 		184,
 		140,
@@ -252,8 +258,8 @@ func main() {
 	dc.SetColor(h1PricePercentageColor)
 	dc.DrawStringAnchored(
 		fmt.Sprintf("%.2f%%", math.Abs(h1PricePercentage)),
-		212,
-		158,
+		222,
+		166,
 		0,
 		0,
 	)
@@ -262,12 +268,12 @@ func main() {
 
 	dc.DrawStringWrapped(
 		fmt.Sprintf(
-			"24H\n%.2f\n%d/%d",
-			h24VolumeFloat,
-			data.Data.Attributes.Transactions.H24.Buys,
-			data.Data.Attributes.Transactions.H24.Sells,
+			"24H\n%s\n%s/%s",
+			Comma(h24Volume),
+			Comma(int64(data.Data.Attributes.Transactions.H24.Buys)),
+			Comma(int64(data.Data.Attributes.Transactions.H24.Sells)),
 		),
-		344,
+		334,
 		140,
 		0,
 		0,
@@ -286,8 +292,8 @@ func main() {
 	dc.SetColor(h24PricePercentageColor)
 	dc.DrawStringAnchored(
 		fmt.Sprintf("%.2f%%", math.Abs(h24PricePercentage)),
-		382,
-		158,
+		384,
+		166,
 		0,
 		0,
 	)
@@ -295,7 +301,7 @@ func main() {
 	dc.SetRGB(1, 1, 1)
 
 	dc.SetFontFace(face18)
-	dc.DrawStringAnchored(time.Now().Format(time.RFC850), 490, 490, 1, 0)
+	dc.DrawStringAnchored(time.Now().Format(time.RFC850), 24, 490, 0, 0)
 
 	outputFile, err := os.Create(IMG_OUT_PATH)
 	if err != nil {
@@ -316,4 +322,39 @@ func main() {
 	}
 
 	fmt.Println("-------------------------------------")
+}
+
+// Comma produces a string form of the given number in base 10 with
+// commas after every three orders of magnitude.
+//
+// e.g. Comma(834142) -> 834,142
+func Comma(v int64) string {
+	sign := ""
+
+	// Min int64 can't be negated to a usable value, so it has to be special cased.
+	if v == math.MinInt64 {
+		return "-9,223,372,036,854,775,808"
+	}
+
+	if v < 0 {
+		sign = "-"
+		v = 0 - v
+	}
+
+	parts := []string{"", "", "", "", "", "", ""}
+	j := len(parts) - 1
+
+	for v > 999 {
+		parts[j] = strconv.FormatInt(v%1000, 10)
+		switch len(parts[j]) {
+		case 2:
+			parts[j] = "0" + parts[j]
+		case 1:
+			parts[j] = "00" + parts[j]
+		}
+		v = v / 1000
+		j--
+	}
+	parts[j] = strconv.Itoa(int(v))
+	return sign + strings.Join(parts[j:], ",")
 }
