@@ -1,8 +1,7 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
-RUN apk add build-base
-RUN apk add gcc g++ libwebp-dev
+RUN apk add build-base gcc g++ libwebp-dev musl
 
 ARG BUILD_VERSION
 
