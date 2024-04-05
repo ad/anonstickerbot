@@ -218,7 +218,7 @@ func main() {
 	if m5PricePercentage > 0 {
 		m5PricePercentageColor = color.RGBA{0, 255, 0, 255}
 	} else if m5PricePercentage < 0 {
-		m5PricePercentageColor = color.RGBA{255, 0, 0, 255}
+		m5PricePercentageColor = color.RGBA{227, 28, 37, 255}
 	}
 
 	dc.SetColor(m5PricePercentageColor)
@@ -252,7 +252,7 @@ func main() {
 	if h1PricePercentage > 0 {
 		h1PricePercentageColor = color.RGBA{0, 255, 0, 255}
 	} else if h1PricePercentage < 0 {
-		h1PricePercentageColor = color.RGBA{255, 0, 0, 255}
+		h1PricePercentageColor = color.RGBA{227, 28, 37, 255}
 	}
 
 	dc.SetColor(h1PricePercentageColor)
@@ -286,7 +286,7 @@ func main() {
 	if h24PricePercentage > 0 {
 		h24PricePercentageColor = color.RGBA{0, 255, 0, 255}
 	} else if h24PricePercentage < 0 {
-		h24PricePercentageColor = color.RGBA{255, 0, 0, 255}
+		h24PricePercentageColor = color.RGBA{227, 28, 37, 255}
 	}
 
 	dc.SetColor(h24PricePercentageColor)
