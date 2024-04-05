@@ -1,15 +1,23 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"image/color"
 	"math"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/ad/anonstickerbot/config"
+	"github.com/ad/anonstickerbot/logger"
+	"github.com/ad/anonstickerbot/sender"
 	"github.com/fogleman/gg"
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/golang/freetype/truetype"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/encoder"
@@ -17,104 +25,109 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-const (
-	IMG_IN_PATH  = "./stickerAnon.webp"
-	IMG_OUT_PATH = "./stickerpack.webp"
-	DATA_URL     = "https://api.geckoterminal.com/api/v2/networks/ton/pools/"
-	TOKEN        = "EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3"
-	INCLUDE      = "?include=dex%2Cdex.network.explorers%2Cdex_link_services%2Cnetwork_link_services%2Cpairs%2Ctoken_link_services%2Ctokens.token_security_metric%2Ctokens.tags&base_token=0"
-)
-
-type GeckoterminalResponse struct {
-	Data struct {
-		ID         string `json:"id"`
-		Type       string `json:"type"`
-		Attributes struct {
-			BaseTokenPriceUsd             string      `json:"base_token_price_usd"`
-			BaseTokenPriceNativeCurrency  string      `json:"base_token_price_native_currency"`
-			QuoteTokenPriceUsd            string      `json:"quote_token_price_usd"`
-			QuoteTokenPriceNativeCurrency string      `json:"quote_token_price_native_currency"`
-			BaseTokenPriceQuoteToken      string      `json:"base_token_price_quote_token"`
-			QuoteTokenPriceBaseToken      string      `json:"quote_token_price_base_token"`
-			Address                       string      `json:"address"`
-			Name                          string      `json:"name"`
-			PoolCreatedAt                 time.Time   `json:"pool_created_at"`
-			FdvUsd                        string      `json:"fdv_usd"`
-			MarketCapUsd                  interface{} `json:"market_cap_usd"`
-			PriceChangePercentage         struct {
-				M5  string `json:"m5"`
-				H1  string `json:"h1"`
-				H6  string `json:"h6"`
-				H24 string `json:"h24"`
-			} `json:"price_change_percentage"`
-			Transactions struct {
-				M5 struct {
-					Buys    int `json:"buys"`
-					Sells   int `json:"sells"`
-					Buyers  int `json:"buyers"`
-					Sellers int `json:"sellers"`
-				} `json:"m5"`
-				M15 struct {
-					Buys    int `json:"buys"`
-					Sells   int `json:"sells"`
-					Buyers  int `json:"buyers"`
-					Sellers int `json:"sellers"`
-				} `json:"m15"`
-				M30 struct {
-					Buys    int `json:"buys"`
-					Sells   int `json:"sells"`
-					Buyers  int `json:"buyers"`
-					Sellers int `json:"sellers"`
-				} `json:"m30"`
-				H1 struct {
-					Buys    int `json:"buys"`
-					Sells   int `json:"sells"`
-					Buyers  int `json:"buyers"`
-					Sellers int `json:"sellers"`
-				} `json:"h1"`
-				H24 struct {
-					Buys    int `json:"buys"`
-					Sells   int `json:"sells"`
-					Buyers  int `json:"buyers"`
-					Sellers int `json:"sellers"`
-				} `json:"h24"`
-			} `json:"transactions"`
-			VolumeUsd struct {
-				M5  string `json:"m5"`
-				H1  string `json:"h1"`
-				H6  string `json:"h6"`
-				H24 string `json:"h24"`
-			} `json:"volume_usd"`
-			ReserveInUsd string `json:"reserve_in_usd"`
-		} `json:"attributes"`
-		Relationships struct {
-			BaseToken struct {
-				Data struct {
-					ID   string `json:"id"`
-					Type string `json:"type"`
-				} `json:"data"`
-			} `json:"base_token"`
-			QuoteToken struct {
-				Data struct {
-					ID   string `json:"id"`
-					Type string `json:"type"`
-				} `json:"data"`
-			} `json:"quote_token"`
-			Dex struct {
-				Data struct {
-					ID   string `json:"id"`
-					Type string `json:"type"`
-				} `json:"data"`
-			} `json:"dex"`
-		} `json:"relationships"`
-	} `json:"data"`
-}
-
 func main() {
-	data, err := getData()
+	conf, errConfig := config.InitConfig(os.Args)
+	if errConfig != nil {
+		fmt.Println(errConfig)
+
+		return
+	}
+
+	lgr := logger.InitLogger(conf.Debug)
+
+	// Recovery
+	defer func() {
+		if p := recover(); p != nil {
+			lgr.Error(fmt.Sprintf("panic recovered: %s; stack trace: %s", p, string(debug.Stack())))
+		}
+	}()
+
+	s, errInitSender := sender.InitSender(lgr, conf)
+	if errInitSender != nil {
+		fmt.Println(errInitSender)
+
+		return
+	}
+
+	me, err := s.Bot.GetMe(context.Background())
 	if err != nil {
 		fmt.Println(err)
+
 		return
+	}
+
+	stickerSetName := fmt.Sprintf("stickers_by_%s", me.Username)
+
+	if len(conf.TelegramAdminIDsList) != 0 {
+		s.MakeRequestDeferred(sender.DeferredMessage{
+			Method: "sendMessage",
+			ChatID: conf.TelegramAdminIDsList[0],
+			Text:   "Bot restarted: " + me.Username,
+		}, s.SendResult)
+	}
+
+	updateTicker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-updateTicker.C:
+			err = updateSticker(
+				s.Bot,
+				stickerSetName,
+				conf.DATA_URL,
+				conf.IMG_IN_PATH,
+				conf.IMG_OUT_PATH,
+				me.Username,
+				conf.TelegramAdminIDsList[0],
+			)
+			if err != nil {
+				fmt.Println(err)
+
+				// return
+			}
+		}
+	}
+}
+
+// Comma produces a string form of the given number in base 10 with
+// commas after every three orders of magnitude.
+//
+// e.g. Comma(834142) -> 834,142
+func Comma(v int64) string {
+	sign := ""
+
+	// Min int64 can't be negated to a usable value, so it has to be special cased.
+	if v == math.MinInt64 {
+		return "-9,223,372,036,854,775,808"
+	}
+
+	if v < 0 {
+		sign = "-"
+		v = 0 - v
+	}
+
+	parts := []string{"", "", "", "", "", "", ""}
+	j := len(parts) - 1
+
+	for v > 999 {
+		parts[j] = strconv.FormatInt(v%1000, 10)
+		switch len(parts[j]) {
+		case 2:
+			parts[j] = "0" + parts[j]
+		case 1:
+			parts[j] = "00" + parts[j]
+		}
+		v = v / 1000
+		j--
+	}
+	parts[j] = strconv.Itoa(int(v))
+
+	return sign + strings.Join(parts[j:], ",")
+}
+
+func updateSticker(b *bot.Bot, stickerSetName, dataURL, imgInPath, imgOutPath, botUsername string, telegramID int64) error {
+	data, err := getData(dataURL)
+	if err != nil {
+		return err
 	}
 
 	fmt.Println("-------------------------------------")
@@ -163,17 +176,15 @@ func main() {
 	fmt.Printf("Price change percentage H24: %.2f%%, volume %d, buy %d/sell %d\n", h24PricePercentage, h24Volume, data.Data.Attributes.Transactions.H24.Buys, data.Data.Attributes.Transactions.H24.Sells)
 	fmt.Printf("Reserve in USD: %s\n", data.Data.Attributes.ReserveInUsd)
 
-	inputFile, err := os.Open(IMG_IN_PATH)
+	inputFile, err := os.Open(imgInPath)
 	if err != nil {
-		fmt.Printf("Error loading image: %v\n", err)
-		return
+		return fmt.Errorf("error loading image: %v", err)
 	}
 	defer inputFile.Close()
 
 	img, err := webp.Decode(inputFile, &decoder.Options{})
 	if err != nil {
-		fmt.Printf("Error decoding image: %v\n", err)
-		return
+		return fmt.Errorf("error decoding image: %v", err)
 	}
 
 	dc := gg.NewContextForImage(img)
@@ -303,58 +314,145 @@ func main() {
 	dc.SetFontFace(face18)
 	dc.DrawStringAnchored(time.Now().Format(time.RFC850), 24, 490, 0, 0)
 
-	outputFile, err := os.Create(IMG_OUT_PATH)
+	outputFile, err := os.Create(imgOutPath)
 	if err != nil {
-		fmt.Printf("Error creating image: %v\n", err)
-		return
+		return fmt.Errorf("error creating image: %v", err)
 	}
 	defer outputFile.Close()
 
 	options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
 	if err != nil {
-		fmt.Printf("Error NewLossyEncoderOptions: %v\n", err)
-		return
+		return fmt.Errorf("error NewLossyEncoderOptions: %v", err)
 	}
 
 	if err := webp.Encode(outputFile, dc.Image(), options); err != nil {
-		fmt.Printf("Error Encode: %v\n", err)
-		return
+		return fmt.Errorf("error Encode: %v", err)
 	}
 
 	fmt.Println("-------------------------------------")
-}
 
-// Comma produces a string form of the given number in base 10 with
-// commas after every three orders of magnitude.
-//
-// e.g. Comma(834142) -> 834,142
-func Comma(v int64) string {
-	sign := ""
+	fileContent, _ := os.ReadFile(imgOutPath)
 
-	// Min int64 can't be negated to a usable value, so it has to be special cased.
-	if v == math.MinInt64 {
-		return "-9,223,372,036,854,775,808"
+	file, err := b.UploadStickerFile(context.Background(), &bot.UploadStickerFileParams{
+		UserID: telegramID,
+		PngSticker: &models.InputFileUpload{
+			Filename: imgOutPath,
+			Data:     bytes.NewReader(fileContent),
+		},
+	})
+
+	if err != nil {
+		return err
 	}
 
-	if v < 0 {
-		sign = "-"
-		v = 0 - v
-	}
+	fmt.Printf("FileID: %s\n", file.FileID)
 
-	parts := []string{"", "", "", "", "", "", ""}
-	j := len(parts) - 1
+	stickerSet, err := b.GetStickerSet(context.Background(), &bot.GetStickerSetParams{
+		Name: stickerSetName,
+	})
 
-	for v > 999 {
-		parts[j] = strconv.FormatInt(v%1000, 10)
-		switch len(parts[j]) {
-		case 2:
-			parts[j] = "0" + parts[j]
-		case 1:
-			parts[j] = "00" + parts[j]
+	// time.Sleep(1 * time.Second)
+
+	if err != nil {
+		if err.Error() == "bad request, Bad Request: STICKERSET_INVALID" {
+			result, err := b.CreateNewStickerSet(context.Background(), &bot.CreateNewStickerSetParams{
+				UserID:          telegramID,
+				Name:            stickerSetName,
+				Title:           "Stickers by " + botUsername,
+				NeedsRepainting: false,
+				Stickers: []models.InputSticker{
+					{
+						Sticker: &models.InputFileString{
+							Data: file.FileID,
+						},
+						EmojiList: []string{"🚀"},
+						Format:    "static",
+						MaskPosition: models.MaskPosition{
+							Point: "forehead",
+						},
+					},
+				},
+			})
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("result: %+v, stickerset created check out: https://t.me/addstickers/%s\n", result, stickerSetName)
+
+			return nil
+		} else {
+			return err
 		}
-		v = v / 1000
-		j--
+	} else {
+		fmt.Printf("StickerSet https://t.me/addstickers/%s exists\n", stickerSetName)
 	}
-	parts[j] = strconv.Itoa(int(v))
-	return sign + strings.Join(parts[j:], ",")
+
+	// time.Sleep(1 * time.Second)
+
+	// fmt.Printf("StickerSet: %+v\n", stickerSet)
+	if len(stickerSet.Stickers) == 0 {
+		fmt.Println("StickerSet is empty")
+	} else {
+		for _, sticker := range stickerSet.Stickers {
+			fmt.Println(sticker.Emoji, sticker.FileID)
+			result, err := b.DeleteStickerFromSet(context.Background(), &bot.DeleteStickerFromSetParams{
+				Sticker: sticker.FileID,
+			})
+
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			if result {
+				fmt.Printf("Sticker %s deleted\n", sticker.FileID)
+			}
+		}
+	}
+
+	result, err := b.AddStickerToSet(context.Background(), &bot.AddStickerToSetParams{
+		UserID: telegramID,
+		Name:   stickerSetName,
+		Sticker: models.InputSticker{
+			Sticker: &models.InputFileString{
+				Data: file.FileID,
+			},
+			Format:    "static",
+			EmojiList: []string{"🚀"},
+			MaskPosition: models.MaskPosition{
+				Point: "forehead",
+			},
+		},
+	})
+
+	// result, err := b.ReplaceStickerInSet(context.Background(), &bot.ReplaceStickerInSetParams{
+	// 	UserID:     telegramID,
+	// 	Name:       stickerSetName,
+	// 	OldSticker: stickerSet.Stickers[0].FileID,
+	// 	Sticker: models.InputSticker{
+	// 		Sticker: &models.InputFileString{
+	// 			Data: file.FileID,
+	// 		},
+	// 		EmojiList: []string{"🚀"},
+	// 		Format:    "static",
+	// 		MaskPosition: models.MaskPosition{
+	// 			Point: "forehead",
+	// 		},
+	// 	},
+	// })
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("result: %+v, stickerset updated check out: https://t.me/addstickers/%s\n", result, stickerSetName)
+
+	// _, _ = s.Bot.SendSticker(context.Background(), &bot.SendStickerParams{
+	// 	ChatID: telegramID,
+	// 	Sticker: &models.InputFileString{
+	// 		Data: file.FileID,
+	// 	},
+	// })
+
+	return nil
 }
