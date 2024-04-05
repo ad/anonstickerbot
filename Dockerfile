@@ -1,6 +1,7 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
+RUN apk add build-base
 RUN apk add gcc g++ libwebp-dev
 
 ARG BUILD_VERSION
@@ -15,19 +16,18 @@ COPY sender sender
 COPY main.go main.go
 COPY draw.go draw.go
 COPY data.go data.go
-COPY config.json /config.json
-COPY stickerAnon.webp /stickerAnon.webp
-RUN go version
-RUN CGO_ENABLED=1 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -o /go/bin/app .
+RUN CGO_ENABLED=1 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -trimpath -o /dist/app
+RUN ldd /dist/app | tr -s [:blank:] '\n' | grep ^/ | xargs -I % install -D % /dist/%
+RUN ln -s ld-musl-x86_64.so.1 /dist/lib/libc.musl-x86_64.so.1
 
 FROM scratch
-WORKDIR /app/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
+COPY --from=builder /dist /
 COPY config.json /config.json
-COPY --from=builder /go/bin/app /go/bin/app
-ENTRYPOINT ["/go/bin/app"]
+COPY stickerAnon.webp /stickerAnon.webp
+ENTRYPOINT ["/app"]
 
 #
 # LABEL target docker image
