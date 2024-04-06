@@ -10,14 +10,13 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 COPY vendor vendor
 COPY config config
+COPY app app
+COPY stickerUpdater stickerUpdater
 COPY logger logger
 COPY sender sender
 COPY main.go main.go
-COPY draw.go draw.go
-COPY data.go data.go
 RUN CGO_ENABLED=1 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -trimpath -o /dist/app
 RUN ldd /dist/app | tr -s [:blank:] '\n' | grep ^/ | xargs -I % install -D % /dist/%
-RUN ls -la /dist/lib/
 RUN ln -s ld-musl-arm64.so.1 /dist/lib/libc.musl-arm64.so.1
 
 FROM scratch

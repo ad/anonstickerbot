@@ -13,7 +13,7 @@ import (
 
 type Sender struct {
 	sync.RWMutex
-	lgr              *slog.Logger
+	logger           *slog.Logger
 	config           *config.Config
 	Bot              *bot.Bot
 	Config           *config.Config
@@ -21,9 +21,9 @@ type Sender struct {
 	lastMessageTimes map[int64]int64
 }
 
-func InitSender(lgr *slog.Logger, config *config.Config) (*Sender, error) {
+func InitSender(ctx context.Context, logger *slog.Logger, config *config.Config) (*Sender, error) {
 	sender := &Sender{
-		lgr:              lgr,
+		logger:           logger,
 		config:           config,
 		deferredMessages: make(map[int64]chan DeferredMessage),
 		lastMessageTimes: make(map[int64]int64),
@@ -39,7 +39,7 @@ func InitSender(lgr *slog.Logger, config *config.Config) (*Sender, error) {
 		return nil, fmt.Errorf("start bot error: %s", newBotError)
 	}
 
-	go b.Start(context.Background())
+	go b.Start(ctx)
 	go sender.sendDeferredMessages()
 
 	sender.Bot = b
@@ -49,6 +49,6 @@ func InitSender(lgr *slog.Logger, config *config.Config) (*Sender, error) {
 
 func (s *Sender) handler(ctx context.Context, b *bot.Bot, update *bm.Update) {
 	if s.config.Debug {
-		s.lgr.Debug(formatUpdateForLog(update))
+		s.logger.Debug(formatUpdateForLog(update))
 	}
 }
