@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"log"
+	"image/png"
 	"log/slog"
 	"math"
 	"os"
@@ -21,7 +21,6 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/golang/freetype/truetype"
-	"github.com/nickalie/go-webpbin"
 	"golang.org/x/image/font/gofont/goregular"
 	xwebp "golang.org/x/image/webp"
 )
@@ -286,16 +285,14 @@ func (su *StickerUpdater) Run() error {
 
 	f, err := os.Create(imgOutPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if err := webpbin.Encode(f, templateFileImage); err != nil {
-		f.Close()
-		log.Fatal(err)
-	}
+	defer f.Close()
 
-	if err := f.Close(); err != nil {
-		log.Fatal(err)
+	err = png.Encode(f, templateFileImage)
+	if err != nil {
+		return err
 	}
 
 	if su.config.Debug {

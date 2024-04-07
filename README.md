@@ -6,7 +6,7 @@ You can add stickers by link https://t.me/addstickers/stickers_by_cryptostickerb
 
 It was created for $ANON coin community https://t.me/anon_club, but you can use it for any other coin or project.
 
-<img src="https://github.com/ad/anonstickerbot/raw/main/stickerpack.webp" width="256">
+<img src="https://github.com/ad/anonstickerbot/raw/main/stickerpack.png" width="256">
 
 ## Getting Started
 

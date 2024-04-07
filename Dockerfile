@@ -1,12 +1,6 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
-RUN apk add --no-cache --update libpng-dev libjpeg-turbo-dev giflib-dev tiff-dev autoconf automake make gcc g++ wget pkgconfig
-
-WORKDIR /
-RUN wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.3.2.tar.gz
-RUN tar -xvzf libwebp-1.3.2.tar.gz
-RUN cd /libwebp-1.3.2 && ./configure && make && make install
 
 ARG BUILD_VERSION
 
@@ -23,21 +17,13 @@ COPY main.go main.go
 RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -trimpath -o /dist/app
 
 FROM scratch
-WORKDIR /webp
-COPY --from=builder /usr/local/bin/cwebp /webp/cwebp
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
-COPY --from=builder /dist /
+COPY --from=builder /dist/app /app
 COPY config.json /config.json
 COPY stickerAnon.webp /stickerAnon.webp
-ENV SKIP_DOWNLOAD true
-ENV VENDOR_PATH /
 ENTRYPOINT ["/app"]
-
-#
-# LABEL target docker image
-#
 
 # Build arguments
 ARG BUILD_ARCH
