@@ -1,7 +1,6 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
-RUN apk add build-base gcc g++ libwebp-dev musl
 
 ARG BUILD_VERSION
 
@@ -15,9 +14,7 @@ COPY stickerUpdater stickerUpdater
 COPY logger logger
 COPY sender sender
 COPY main.go main.go
-RUN CGO_ENABLED=1 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -trimpath -o /dist/app
-RUN ldd /dist/app | tr -s [:blank:] '\n' | grep ^/ | xargs -I % install -D % /dist/%
-RUN ln -s ld-musl-arm64.so.1 /dist/lib/libc.musl-arm64.so.1
+RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -trimpath -o /dist/app
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
