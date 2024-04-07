@@ -1,6 +1,12 @@
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
+RUN apk add --no-cache --update libpng-dev libjpeg-turbo-dev giflib-dev tiff-dev autoconf automake make gcc g++ wget pkgconfig
+
+WORKDIR /
+RUN wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.3.2.tar.gz
+RUN tar -xvzf libwebp-1.3.2.tar.gz
+RUN cd /libwebp-1.3.2 && ./configure && make && make install
 
 ARG BUILD_VERSION
 
@@ -23,6 +29,7 @@ COPY --from=builder /etc/group /etc/group
 COPY --from=builder /dist /
 COPY config.json /config.json
 COPY stickerAnon.webp /stickerAnon.webp
+ENV SKIP_DOWNLOAD true
 ENTRYPOINT ["/app"]
 
 #
