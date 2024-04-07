@@ -2,6 +2,7 @@ package stickerUpdater
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -18,6 +19,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/fogleman/gg"
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/golang/freetype/truetype"
 	"github.com/nickalie/go-webpbin"
 	"golang.org/x/image/font/gofont/goregular"
@@ -45,9 +47,9 @@ func InitStickerUpdater(logger *slog.Logger, config *config.Config, bot *bot.Bot
 }
 
 func (su *StickerUpdater) Run() error {
-	// telegramID := su.config.TelegramAdminIDsList[0]
-	// botUsername := su.botUsername
-	// stickerSetName := su.stickerSetName
+	telegramID := su.config.TelegramAdminIDsList[0]
+	botUsername := su.botUsername
+	stickerSetName := su.stickerSetName
 	dataURL := su.config.DATA_URL
 	imgInPath := su.config.IMG_IN_PATH
 	imgOutPath := su.config.IMG_OUT_PATH
@@ -282,21 +284,6 @@ func (su *StickerUpdater) Run() error {
 		}
 	}
 
-	// outputFile, err := os.Create(imgOutPath)
-	// if err != nil {
-	// 	return fmt.Errorf("error creating image: %v", err)
-	// }
-	// defer outputFile.Close()
-
-	// options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
-	// if err != nil {
-	// 	return fmt.Errorf("error NewLossyEncoderOptions: %v", err)
-	// }
-
-	// if err := webp.Encode(outputFile, templateFileImage, options); err != nil {
-	// 	return fmt.Errorf("error Encode: %v", err)
-	// }
-
 	f, err := os.Create(imgOutPath)
 	if err != nil {
 		log.Fatal(err)
@@ -311,143 +298,134 @@ func (su *StickerUpdater) Run() error {
 		log.Fatal(err)
 	}
 
-	// var buf bytes.Buffer
-	// // Encode lossless webp
-	// if err = webp.Encode(&buf, templateFileImage, &webp.Options{Lossless: true}); err != nil {
-	// 	log.Println(err)
-	// }
-	// if err = ioutil.WriteFile(imgOutPath, buf.Bytes(), 0666); err != nil {
-	// 	log.Println(err)
-	// }
-
 	if su.config.Debug {
 		fmt.Println("-------------------------------------")
 	}
 
-	// fileContent, _ := os.ReadFile(imgOutPath)
+	fileContent, _ := os.ReadFile(imgOutPath)
 
-	// file, err := su.bot.UploadStickerFile(context.Background(), &bot.UploadStickerFileParams{
-	// 	UserID: telegramID,
-	// 	PngSticker: &models.InputFileUpload{
-	// 		Filename: imgOutPath,
-	// 		Data:     bytes.NewReader(fileContent),
-	// 	},
-	// })
+	file, err := su.bot.UploadStickerFile(context.Background(), &bot.UploadStickerFileParams{
+		UserID: telegramID,
+		PngSticker: &models.InputFileUpload{
+			Filename: imgOutPath,
+			Data:     bytes.NewReader(fileContent),
+		},
+	})
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		return err
+	}
 
-	// if su.config.Debug {
-	// 	fmt.Printf("FileID: %s\n", file.FileID)
-	// }
+	if su.config.Debug {
+		fmt.Printf("FileID: %s\n", file.FileID)
+	}
 
-	// stickerSet, err := su.bot.GetStickerSet(context.Background(), &bot.GetStickerSetParams{
-	// 	Name: stickerSetName,
-	// })
+	stickerSet, err := su.bot.GetStickerSet(context.Background(), &bot.GetStickerSetParams{
+		Name: stickerSetName,
+	})
 
-	// if err != nil {
-	// 	if err.Error() == "bad request, Bad Request: STICKERSET_INVALID" {
-	// 		result, err := su.bot.CreateNewStickerSet(context.Background(), &bot.CreateNewStickerSetParams{
-	// 			UserID:          telegramID,
-	// 			Name:            stickerSetName,
-	// 			Title:           "Stickers by " + botUsername,
-	// 			NeedsRepainting: false,
-	// 			Stickers: []models.InputSticker{
-	// 				{
-	// 					Sticker: &models.InputFileString{
-	// 						Data: file.FileID,
-	// 					},
-	// 					EmojiList: []string{"🚀"},
-	// 					Format:    "static",
-	// 					MaskPosition: models.MaskPosition{
-	// 						Point: "forehead",
-	// 					},
-	// 				},
-	// 			},
-	// 		})
+	if err != nil {
+		if err.Error() == "bad request, Bad Request: STICKERSET_INVALID" {
+			result, err := su.bot.CreateNewStickerSet(context.Background(), &bot.CreateNewStickerSetParams{
+				UserID:          telegramID,
+				Name:            stickerSetName,
+				Title:           "Stickers by " + botUsername,
+				NeedsRepainting: false,
+				Stickers: []models.InputSticker{
+					{
+						Sticker: &models.InputFileString{
+							Data: file.FileID,
+						},
+						EmojiList: []string{"🚀"},
+						Format:    "static",
+						MaskPosition: models.MaskPosition{
+							Point: "forehead",
+						},
+					},
+				},
+			})
 
-	// 		if err != nil {
-	// 			return err
-	// 		}
+			if err != nil {
+				return err
+			}
 
-	// 		if su.config.Debug {
-	// 			fmt.Printf("result: %+v, stickerset created check out: https://t.me/addstickers/%s\n", result, stickerSetName)
-	// 		}
+			if su.config.Debug {
+				fmt.Printf("result: %+v, stickerset created check out: https://t.me/addstickers/%s\n", result, stickerSetName)
+			}
 
-	// 		return nil
-	// 	} else {
-	// 		return err
-	// 	}
-	// } else {
-	// 	if su.config.Debug {
-	// 		fmt.Printf("StickerSet https://t.me/addstickers/%s exists\n", stickerSetName)
-	// 	}
-	// }
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		if su.config.Debug {
+			fmt.Printf("StickerSet https://t.me/addstickers/%s exists\n", stickerSetName)
+		}
+	}
 
-	// if len(stickerSet.Stickers) == 0 {
-	// 	if su.config.Debug {
-	// 		fmt.Println("StickerSet is empty")
-	// 	}
-	// } else {
-	// 	for _, sticker := range stickerSet.Stickers {
-	// 		if su.config.Debug {
-	// 			fmt.Println(sticker.Emoji, sticker.FileID)
-	// 		}
-	// 		result, err := su.bot.DeleteStickerFromSet(context.Background(), &bot.DeleteStickerFromSetParams{
-	// 			Sticker: sticker.FileID,
-	// 		})
+	if len(stickerSet.Stickers) == 0 {
+		if su.config.Debug {
+			fmt.Println("StickerSet is empty")
+		}
+	} else {
+		for _, sticker := range stickerSet.Stickers {
+			if su.config.Debug {
+				fmt.Println(sticker.Emoji, sticker.FileID)
+			}
+			result, err := su.bot.DeleteStickerFromSet(context.Background(), &bot.DeleteStickerFromSetParams{
+				Sticker: sticker.FileID,
+			})
 
-	// 		if err != nil {
-	// 			fmt.Println(err)
-	// 		}
+			if err != nil {
+				fmt.Println(err)
+			}
 
-	// 		if result {
-	// 			if su.config.Debug {
-	// 				fmt.Printf("Sticker %s deleted\n", sticker.FileID)
-	// 			}
-	// 		}
-	// 	}
-	// }
+			if result {
+				if su.config.Debug {
+					fmt.Printf("Sticker %s deleted\n", sticker.FileID)
+				}
+			}
+		}
+	}
 
-	// result, err := su.bot.AddStickerToSet(context.Background(), &bot.AddStickerToSetParams{
-	// 	UserID: telegramID,
-	// 	Name:   stickerSetName,
+	result, err := su.bot.AddStickerToSet(context.Background(), &bot.AddStickerToSetParams{
+		UserID: telegramID,
+		Name:   stickerSetName,
+		Sticker: models.InputSticker{
+			Sticker: &models.InputFileString{
+				Data: file.FileID,
+			},
+			Format:    "static",
+			EmojiList: []string{"🚀"},
+			MaskPosition: models.MaskPosition{
+				Point: "forehead",
+			},
+		},
+	})
+
+	// result, err := b.ReplaceStickerInSet(context.Background(), &bot.ReplaceStickerInSetParams{
+	// 	UserID:     telegramID,
+	// 	Name:       stickerSetName,
+	// 	OldSticker: stickerSet.Stickers[0].FileID,
 	// 	Sticker: models.InputSticker{
 	// 		Sticker: &models.InputFileString{
 	// 			Data: file.FileID,
 	// 		},
-	// 		Format:    "static",
 	// 		EmojiList: []string{"🚀"},
+	// 		Format:    "static",
 	// 		MaskPosition: models.MaskPosition{
 	// 			Point: "forehead",
 	// 		},
 	// 	},
 	// })
 
-	// // result, err := b.ReplaceStickerInSet(context.Background(), &bot.ReplaceStickerInSetParams{
-	// // 	UserID:     telegramID,
-	// // 	Name:       stickerSetName,
-	// // 	OldSticker: stickerSet.Stickers[0].FileID,
-	// // 	Sticker: models.InputSticker{
-	// // 		Sticker: &models.InputFileString{
-	// // 			Data: file.FileID,
-	// // 		},
-	// // 		EmojiList: []string{"🚀"},
-	// // 		Format:    "static",
-	// // 		MaskPosition: models.MaskPosition{
-	// // 			Point: "forehead",
-	// // 		},
-	// // 	},
-	// // })
+	if err != nil {
+		return err
+	}
 
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if su.config.Debug {
-	// 	fmt.Printf("result: %+v, stickerset updated check out: https://t.me/addstickers/%s\n", result, stickerSetName)
-	// }
+	if su.config.Debug {
+		fmt.Printf("result: %+v, stickerset updated check out: https://t.me/addstickers/%s\n", result, stickerSetName)
+	}
 
 	return nil
 }
