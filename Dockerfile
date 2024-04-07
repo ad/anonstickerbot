@@ -31,6 +31,7 @@ COPY --from=builder /dist /
 COPY config.json /config.json
 COPY stickerAnon.webp /stickerAnon.webp
 ENV SKIP_DOWNLOAD true
+ENV VENDOR_PATH /bin/webp
 ENTRYPOINT ["/app"]
 
 #
