@@ -318,8 +318,6 @@ func (su *StickerUpdater) Run() error {
 		fmt.Println("-------------------------------------")
 	}
 
-	return nil
-
 	fileContent, _ := os.ReadFile(imgOutPath)
 
 	file, err := su.bot.UploadStickerFile(context.Background(), &bot.UploadStickerFileParams{
