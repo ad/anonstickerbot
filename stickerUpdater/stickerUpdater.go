@@ -274,7 +274,7 @@ func (su *StickerUpdater) Run() error {
 					YOffset:     300,
 					Width:       512,
 					Height:      512,
-					CandleWidth: 2,
+					CandleWidth: 6,
 					Rows:        20,
 					Columns:     20,
 				},
@@ -324,8 +324,6 @@ func (su *StickerUpdater) Run() error {
 	stickerSet, err := su.bot.GetStickerSet(context.Background(), &bot.GetStickerSetParams{
 		Name: stickerSetName,
 	})
-
-	// time.Sleep(1 * time.Second)
 
 	if err != nil {
 		if err.Error() == "bad request, Bad Request: STICKERSET_INVALID" {
