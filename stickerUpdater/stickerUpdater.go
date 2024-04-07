@@ -130,11 +130,30 @@ func (su *StickerUpdater) Run() error {
 	dc.SetFontFace(face32)
 	dc.DrawString(data.Data.Attributes.Name, 70, 58)
 
-	dc.SetFontFace(face24)
-	dc.DrawStringAnchored(data.Data.Attributes.QuoteTokenPriceBaseToken, 370, 54, 1, 0)
+	baseTokenPriceUsd, err := strconv.ParseFloat(data.Data.Attributes.BaseTokenPriceUsd, 64)
+	if err != nil {
+		baseTokenPriceUsd = 0
+	}
 
-	dc.SetFontFace(face18)
-	dc.DrawStringAnchored(data.Data.Attributes.BaseTokenPriceQuoteToken, 490, 54, 1, 0)
+	quoteTokenPriceBaseToken, err := strconv.ParseFloat(data.Data.Attributes.QuoteTokenPriceBaseToken, 64)
+	if err != nil {
+		quoteTokenPriceBaseToken = 0
+	}
+
+	baseTokenPriceQuoteToken, err := strconv.ParseFloat(data.Data.Attributes.BaseTokenPriceQuoteToken, 64)
+	if err != nil {
+		baseTokenPriceQuoteToken = 0
+	}
+
+	dc.SetFontFace(face24)
+	dc.DrawStringAnchored(
+		fmt.Sprintf(
+			"$%s   A%s   T%s",
+			humanize.CommafWithDigits(baseTokenPriceUsd, 5),
+			humanize.CommafWithDigits(quoteTokenPriceBaseToken, 2),
+			humanize.CommafWithDigits(baseTokenPriceQuoteToken, 5),
+		),
+		256, 280, 0.5, 0)
 
 	dc.SetFontFace(face26)
 
@@ -254,7 +273,7 @@ func (su *StickerUpdater) Run() error {
 	}
 
 	dc.SetFontFace(face26)
-	dc.DrawStringAnchored("Capitalization $"+humanize.Comma(mCap), 24, 290, 0, 0)
+	dc.DrawStringAnchored("$"+humanize.Comma(mCap), 490, 30, 1, 1)
 
 	templateFileImage := dc.Image()
 	if su.config.DATA_OHLCV_URL != "" {
@@ -298,6 +317,8 @@ func (su *StickerUpdater) Run() error {
 	if su.config.Debug {
 		fmt.Println("-------------------------------------")
 	}
+
+	return nil
 
 	fileContent, _ := os.ReadFile(imgOutPath)
 
