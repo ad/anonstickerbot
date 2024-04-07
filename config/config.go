@@ -22,7 +22,9 @@ type Config struct {
 
 	IMG_IN_PATH  string `json:"IMG_IN_PATH"`
 	IMG_OUT_PATH string `json:"IMG_OUT_PATH"`
-	DATA_URL     string `json:"DATA_URL"`
+
+	DATA_URL       string `json:"DATA_URL"`
+	DATA_OHLCV_URL string `json:"DATA_OHLCV_URL"`
 
 	UPDATE_DELAY int `json:"UPDATE_DELAY"`
 
@@ -59,7 +61,9 @@ func InitConfig(args []string) (*Config, error) {
 
 		flags.StringVar(&config.IMG_IN_PATH, "imgInPath", lookupEnvOrString("IMG_IN_PATH", config.IMG_IN_PATH), "IMG_IN_PATH")
 		flags.StringVar(&config.IMG_OUT_PATH, "imgOutPath", lookupEnvOrString("IMG_OUT_PATH", config.IMG_OUT_PATH), "IMG_OUT_PATH")
+
 		flags.StringVar(&config.DATA_URL, "dataUrl", lookupEnvOrString("DATA_URL", config.DATA_URL), "DATA_URL")
+		flags.StringVar(&config.DATA_OHLCV_URL, "dataOhlcvUrl", lookupEnvOrString("DATA_OHLCV_URL", config.DATA_OHLCV_URL), "DATA_OHLCV_URL")
 
 		flags.IntVar(&config.UPDATE_DELAY, "updateDelay", lookupEnvOrInt("UPDATE_DELAY", config.UPDATE_DELAY), "UPDATE_DELAY")
 

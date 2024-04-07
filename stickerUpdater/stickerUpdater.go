@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
 	"image/color"
+	"image/draw"
 	"log/slog"
 	"math"
 	"os"
@@ -242,7 +244,7 @@ func (su *StickerUpdater) Run() error {
 	dc.SetRGB(1, 1, 1)
 
 	dc.SetFontFace(face18)
-	dc.DrawStringAnchored(time.Now().Format(time.RFC850), 24, 490, 0, 0)
+	dc.DrawStringAnchored(time.Now().Format(time.RFC822), 490, 100, 1, 0.5)
 
 	dc.SetFontFace(face32)
 	dc.DrawStringAnchored("t.me/anon_club", 24, 110, 0, 0)
@@ -255,6 +257,33 @@ func (su *StickerUpdater) Run() error {
 	dc.SetFontFace(face26)
 	dc.DrawStringAnchored("Capitalization $"+humanize.Comma(mCap), 24, 290, 0, 0)
 
+	templateFileImage := dc.Image()
+	if su.config.DATA_OHLCV_URL != "" {
+		ohlcvData, err := getOHLCVData(su.config.DATA_OHLCV_URL)
+		if err == nil {
+			candles := getCandles(ohlcvData)
+
+			imgNRGBA := image.NewNRGBA(image.Rect(0, 0, 512, 512))
+			draw.Draw(imgNRGBA, imgNRGBA.Bounds(), &image.Uniform{BG_COLOR}, image.ZP, draw.Src)
+			draw.Draw(imgNRGBA, templateFileImage.Bounds(), templateFileImage, templateFileImage.Bounds().Min, draw.Over)
+
+			createAxes(
+				imgNRGBA,
+				candles,
+				Options{
+					YOffset:     300,
+					Width:       512,
+					Height:      512,
+					CandleWidth: 2,
+					Rows:        20,
+					Columns:     20,
+				},
+			)
+
+			templateFileImage = imgNRGBA
+		}
+	}
+
 	outputFile, err := os.Create(imgOutPath)
 	if err != nil {
 		return fmt.Errorf("error creating image: %v", err)
@@ -266,7 +295,7 @@ func (su *StickerUpdater) Run() error {
 		return fmt.Errorf("error NewLossyEncoderOptions: %v", err)
 	}
 
-	if err := webp.Encode(outputFile, dc.Image(), options); err != nil {
+	if err := webp.Encode(outputFile, templateFileImage, options); err != nil {
 		return fmt.Errorf("error Encode: %v", err)
 	}
 

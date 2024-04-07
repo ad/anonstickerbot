@@ -1,5 +1,5 @@
 {
-    "version": "0.1.3",
+    "version": "0.2.0",
     "name": "anonstickerbot",
     "slug": "anonstickerbot",
     "description": "",
@@ -20,6 +20,7 @@
         "IMG_IN_PATH": "stickerAnon.webp",
         "IMG_OUT_PATH": "stickerpack.webp",
         "DATA_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3?include=dex%2Cdex.network.explorers%2Cdex_link_services%2Cnetwork_link_services%2Cpairs%2Ctoken_link_services%2Ctokens.token_security_metric%2Ctokens.tags&base_token=0",
+        "DATA_OHLCV_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3/ohlcv/minute?aggregate=15&limit=24&currency=usd",
         "UPDATE_DELAY": 60,
         "DEBUG": false
     },
@@ -29,6 +30,7 @@
         "IMG_IN_PATH": "str",
         "IMG_OUT_PATH": "str",
         "DATA_URL": "str",
+        "DATA_OHLCV_URL": "str",
         "UPDATE_DELAY": "int",
         "DEBUG": "bool"
     }
