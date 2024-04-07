@@ -15,7 +15,7 @@ import (
 
 var skipDownload bool
 var dest = ".bin/webp"
-var libwebpVersion = "1.2.0"
+var libwebpVersion = "1.3.2"
 
 type OptionFunc func(binWrapper *binwrapper.BinWrapper) error
 
@@ -99,6 +99,7 @@ func createBinWrapper(optionFuncs ...OptionFunc) *binwrapper.BinWrapper {
 		"1.1.0-rc2": "10.15",
 		"1.2.0":     "10.15",
 		"1.2.0-rc3": "10.15",
+		"1.3.2":     "10.15",
 	}
 	base := "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/"
 
@@ -125,6 +126,16 @@ func createBinWrapper(optionFuncs ...OptionFunc) *binwrapper.BinWrapper {
 					URL(base + "libwebp-" + libwebpVersion + "-linux-x86-64.tar.gz").
 					Os("linux").
 					Arch("x64")).
+			Src(
+				binwrapper.NewSrc().
+					URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+					Os("linux").
+					Arch("aarch64")).
+			Src(
+				binwrapper.NewSrc().
+					URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+					Os("linux").
+					Arch("arm64")).
 			Src(
 				binwrapper.NewSrc().
 					URL(base + "libwebp-" + libwebpVersion + "-windows-x64.zip").
