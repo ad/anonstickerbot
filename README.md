@@ -2,7 +2,7 @@
 
 Anon Sticker Bot is a Telegram bot that allows users to create custom stickers. The bot provides a wide range of customization options, including text, emojis, and other graphic elements, to help you create unique and personalized stickers. Whether you're looking to add a touch of humor, creativity, or personality to your messages, Anon Sticker Bot has you covered. So why wait? Add Anon Sticker Bot to your Telegram account today and start creating your own custom stickers!
 
-You can add stickers by link https://t.me/addstickers/stickers_by_cryptostickerbot
+This is inline telegram bot, you can use it in any chat by typing @cryptostickerbot and get stickers with your coin logo and text.
 
 It was created for $ANON coin community https://t.me/anon_club, but you can use it for any other coin or project.
 
