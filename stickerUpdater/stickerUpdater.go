@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"image/png"
+	"image/jpeg"
 	"log/slog"
 	"math"
 	"os"
@@ -23,7 +23,7 @@ import (
 	"github.com/go-telegram/bot/models"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font/gofont/goregular"
-	xwebp "golang.org/x/image/webp"
+	"golang.org/x/image/webp"
 )
 
 type StickerUpdater struct {
@@ -46,8 +46,6 @@ func InitStickerUpdater(logger *slog.Logger, config *config.Config, bot *bot.Bot
 
 func (su *StickerUpdater) Run() error {
 	dataURL := su.config.DATA_URL
-	imgInPath := su.config.IMG_IN_PATH
-	imgOutPath := su.config.IMG_OUT_PATH
 
 	data, err := getData(dataURL)
 	if err != nil {
@@ -104,17 +102,17 @@ func (su *StickerUpdater) Run() error {
 		fmt.Printf("Reserve in USD: %s\n", data.Data.Attributes.ReserveInUsd)
 	}
 
-	inputFile, err := os.ReadFile(imgInPath)
+	webpFile, err := os.ReadFile(su.config.IMG_IN_PATH)
 	if err != nil {
 		return err
 	}
 
-	img, err := xwebp.Decode(bytes.NewReader(inputFile))
+	inputFile, err := webp.Decode(bytes.NewReader(webpFile))
 	if err != nil {
 		return err
 	}
 
-	dc := gg.NewContextForImage(img)
+	dc := gg.NewContextForImage(inputFile)
 
 	font, _ := truetype.Parse(goregular.TTF)
 	face18 := truetype.NewFace(font, &truetype.Options{Size: 18})
@@ -278,8 +276,7 @@ func (su *StickerUpdater) Run() error {
 			candles := getCandles(ohlcvData)
 
 			imgNRGBA := image.NewNRGBA(image.Rect(0, 0, 512, 512))
-			draw.Draw(imgNRGBA, imgNRGBA.Bounds(), &image.Uniform{BG_COLOR}, image.ZP, draw.Src)
-			draw.Draw(imgNRGBA, templateFileImage.Bounds(), templateFileImage, templateFileImage.Bounds().Min, draw.Over)
+			draw.Draw(imgNRGBA, templateFileImage.Bounds(), templateFileImage, image.Point{0, 0}, draw.Over)
 
 			createAxes(
 				imgNRGBA,
@@ -298,14 +295,9 @@ func (su *StickerUpdater) Run() error {
 		}
 	}
 
-	f, err := os.Create(imgOutPath)
-	if err != nil {
-		return err
-	}
+	buf := new(bytes.Buffer)
 
-	defer f.Close()
-
-	err = png.Encode(f, templateFileImage)
+	err = jpeg.Encode(buf, templateFileImage, &jpeg.Options{Quality: 75})
 	if err != nil {
 		return err
 	}
@@ -314,15 +306,13 @@ func (su *StickerUpdater) Run() error {
 		fmt.Println("-------------------------------------")
 	}
 
-	fileContent, _ := os.ReadFile(imgOutPath)
-
 	msg, err := su.bot.SendSticker(context.Background(), &bot.SendStickerParams{
 		ChatID:         -4154669576,
-		ProtectContent: true,
+		ProtectContent: false,
 		Emoji:          "🎱",
 		Sticker: &models.InputFileUpload{
-			Filename: imgOutPath,
-			Data:     bytes.NewReader(fileContent),
+			Filename: "sticker.jpeg",
+			Data:     bytes.NewReader(buf.Bytes()),
 		},
 	})
 

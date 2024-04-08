@@ -12,7 +12,6 @@ var (
 	POSITIVE_COLOR = color.RGBA{R: 126, G: 211, B: 33, A: 255}
 	NEGATIVE_COLOR = color.RGBA{R: 208, G: 2, B: 27, A: 255}
 	PIKE_COLOR     = color.RGBA{R: 211, G: 211, B: 211, A: 255}
-	BG_COLOR       = color.RGBA{R: 0, G: 0, B: 0, A: 128}
 )
 
 type GeckoterminalOHLCVResponse struct {

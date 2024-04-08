@@ -52,7 +52,10 @@ func Run(ctx context.Context, w io.Writer, args []string) error {
 		return err
 	}
 
-	stickerUpdater.Run()
+	err = stickerUpdater.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	updateTicker := time.NewTicker(time.Duration(conf.UPDATE_DELAY) * time.Second)
 
