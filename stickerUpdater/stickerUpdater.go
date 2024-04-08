@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"image/jpeg"
 	"log/slog"
 	"math"
 	"os"
@@ -22,6 +21,7 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/golang/freetype/truetype"
+	"github.com/nickalie/go-webpbin"
 	"golang.org/x/image/font/gofont/goregular"
 	"golang.org/x/image/webp"
 )
@@ -297,8 +297,7 @@ func (su *StickerUpdater) Run() error {
 
 	buf := new(bytes.Buffer)
 
-	err = jpeg.Encode(buf, templateFileImage, &jpeg.Options{Quality: 75})
-	if err != nil {
+	if err := webpbin.Encode(buf, templateFileImage); err != nil {
 		return err
 	}
 
