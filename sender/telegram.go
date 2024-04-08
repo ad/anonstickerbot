@@ -62,13 +62,10 @@ func (s *Sender) handler(ctx context.Context, b *bot.Bot, update *bm.Update) {
 	s.RLock()
 	defer s.RUnlock()
 
-	fileID, ok := s.LastStickers["anon"]
-	if !ok {
-		return
-	}
+	results := []models.InlineQueryResult{}
 
-	results := []models.InlineQueryResult{
-		&models.InlineQueryResultCachedSticker{ID: "1", StickerFileID: fileID},
+	for name, fileID := range s.LastStickers {
+		results = append(results, &models.InlineQueryResultCachedSticker{ID: name, StickerFileID: fileID})
 	}
 
 	_, err := b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{

@@ -52,7 +52,7 @@ func Run(ctx context.Context, w io.Writer, args []string) error {
 		return err
 	}
 
-	err = stickerUpdater.Run()
+	err = stickerUpdater.RunAll()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -61,7 +61,7 @@ func Run(ctx context.Context, w io.Writer, args []string) error {
 
 	go func() {
 		for range updateTicker.C {
-			err = stickerUpdater.Run()
+			err = stickerUpdater.RunAll()
 			if err != nil {
 				fmt.Println(err)
 			}

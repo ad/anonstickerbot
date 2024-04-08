@@ -1,5 +1,5 @@
 {
-    "version": "0.3.2",
+    "version": "0.4.0",
     "name": "anonstickerbot",
     "slug": "anonstickerbot",
     "description": "",
@@ -18,9 +18,9 @@
         "TELEGRAM_TOKEN": "",
         "TELEGRAM_ADMIN_IDS": "",
         "TELEGRAM_TARGET_CHAT": "",
-        "IMG_IN_PATH": "stickerAnon.webp",
-        "DATA_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3?include=dex%2Cdex.network.explorers%2Cdex_link_services%2Cnetwork_link_services%2Cpairs%2Ctoken_link_services%2Ctokens.token_security_metric%2Ctokens.tags&base_token=0",
-        "DATA_OHLCV_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3/ohlcv/minute?aggregate=15&limit=24&currency=usd",
+        "TOKENS_PATH": "/tokens",
+        "DATA_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/%s?include=dex%2Cdex.network.explorers%2Cdex_link_services%2Cnetwork_link_services%2Cpairs%2Ctoken_link_services%2Ctokens.token_security_metric%2Ctokens.tags&base_token=0",
+        "DATA_OHLCV_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/%s/ohlcv/minute?aggregate=15&limit=24&currency=usd",
         "UPDATE_DELAY": 60,
         "DEBUG": false
     },
@@ -28,7 +28,7 @@
         "TELEGRAM_TOKEN": "str",
         "TELEGRAM_ADMIN_IDS": "str",
         "TELEGRAM_TARGET_CHAT": "str",
-        "IMG_IN_PATH": "str",
+        "TOKENS_PATH": "str",
         "DATA_URL": "str",
         "DATA_OHLCV_URL": "str",
         "UPDATE_DELAY": "int",

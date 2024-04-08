@@ -22,7 +22,7 @@ type Config struct {
 	TelegramTargetChat   string  `json:"TELEGRAM_TARGET_CHAT"`
 	TelegramTargetChatID int64   `json:"-"`
 
-	IMG_IN_PATH string `json:"IMG_IN_PATH"`
+	TOKENS_PATH string `json:"TOKENS_PATH"`
 
 	DATA_URL       string `json:"DATA_URL"`
 	DATA_OHLCV_URL string `json:"DATA_OHLCV_URL"`
@@ -61,7 +61,7 @@ func InitConfig(args []string) (*Config, error) {
 		flags.StringVar(&config.TelegramAdminIDs, "telegramAdminIDs", lookupEnvOrString("TELEGRAM_ADMIN_IDS", config.TelegramAdminIDs), "TELEGRAM_ADMIN_IDS")
 		flags.StringVar(&config.TelegramTargetChat, "telegramTargetChat", lookupEnvOrString("TELEGRAM_TARGET_CHAT", config.TelegramTargetChat), "TELEGRAM_TARGET_CHAT")
 
-		flags.StringVar(&config.IMG_IN_PATH, "imgInPath", lookupEnvOrString("IMG_IN_PATH", config.IMG_IN_PATH), "IMG_IN_PATH")
+		flags.StringVar(&config.TOKENS_PATH, "tokensPath", lookupEnvOrString("TOKENS_PATH", config.TOKENS_PATH), "TOKENS_PATH")
 
 		flags.StringVar(&config.DATA_URL, "dataUrl", lookupEnvOrString("DATA_URL", config.DATA_URL), "DATA_URL")
 		flags.StringVar(&config.DATA_OHLCV_URL, "dataOhlcvUrl", lookupEnvOrString("DATA_OHLCV_URL", config.DATA_OHLCV_URL), "DATA_OHLCV_URL")

@@ -3,6 +3,7 @@ package stickerUpdater
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -11,6 +12,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ad/anonstickerbot/config"
@@ -27,29 +29,95 @@ import (
 )
 
 type StickerUpdater struct {
-	logger *slog.Logger
-	config *config.Config
-	sender *sender.Sender
-	bot    *bot.Bot
+	logger   *slog.Logger
+	config   *config.Config
+	sender   *sender.Sender
+	bot      *bot.Bot
+	stickers map[string]*StickerConfig
+}
+
+type StickerConfig struct {
+	Name    string      `json:"name"`
+	Address string      `json:"address"`
+	Emoji   string      `json:"emoji"`
+	image   image.Image `json:"-"`
 }
 
 func InitStickerUpdater(logger *slog.Logger, config *config.Config, bot *bot.Bot, sender *sender.Sender) (*StickerUpdater, error) {
 	stickerUpdater := &StickerUpdater{
-		logger: logger,
-		config: config,
-		bot:    bot,
-		sender: sender,
+		logger:   logger,
+		config:   config,
+		bot:      bot,
+		sender:   sender,
+		stickers: make(map[string]*StickerConfig),
 	}
+
+	// read directory with tokens and load configs from json
+	dirs, err := os.ReadDir(config.TOKENS_PATH)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dir := range dirs {
+		if !dir.IsDir() {
+			continue
+		}
+
+		file, err := os.ReadFile(fmt.Sprintf("%s/%s/info.json", config.TOKENS_PATH, dir.Name()))
+		if err != nil {
+			continue
+		}
+
+		stickerConfig := &StickerConfig{}
+		if err := json.Unmarshal(file, stickerConfig); err != nil {
+			continue
+		}
+
+		webpFile, err := os.ReadFile(fmt.Sprintf("%s/%s/sticker.webp", config.TOKENS_PATH, dir.Name()))
+		if err != nil {
+			continue
+		}
+
+		inputFile, err := webp.Decode(bytes.NewReader(webpFile))
+		if err != nil {
+			continue
+		}
+
+		stickerConfig.image = inputFile
+
+		stickerUpdater.stickers[stickerConfig.Name] = stickerConfig
+	}
+
+	fmt.Printf("stickerUpdater.stickers: %d\n", len(stickerUpdater.stickers))
 
 	return stickerUpdater, nil
 }
 
-func (su *StickerUpdater) Run() error {
-	dataURL := su.config.DATA_URL
+func (su *StickerUpdater) Run(name string) error {
+	stickerConfig, ok := su.stickers[name]
+	if !ok {
+		return fmt.Errorf("sticker with name %q not found", name)
+	}
+
+	return su.updateSticker(stickerConfig)
+}
+
+func (su *StickerUpdater) RunAll() error {
+	for _, stickerConfig := range su.stickers {
+		if err := su.updateSticker(stickerConfig); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (su *StickerUpdater) updateSticker(stickerConfig *StickerConfig) error {
+	dataURL := strings.Replace(su.config.DATA_URL, "%s", stickerConfig.Address, 1)
 
 	data, err := getData(dataURL)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s:%s getData error: %w (%s)", stickerConfig.Name, stickerConfig.Address, err, dataURL)
 	}
 
 	if su.config.Debug {
@@ -102,17 +170,7 @@ func (su *StickerUpdater) Run() error {
 		fmt.Printf("Reserve in USD: %s\n", data.Data.Attributes.ReserveInUsd)
 	}
 
-	webpFile, err := os.ReadFile(su.config.IMG_IN_PATH)
-	if err != nil {
-		return err
-	}
-
-	inputFile, err := webp.Decode(bytes.NewReader(webpFile))
-	if err != nil {
-		return err
-	}
-
-	dc := gg.NewContextForImage(inputFile)
+	dc := gg.NewContextForImage(stickerConfig.image)
 
 	font, _ := truetype.Parse(goregular.TTF)
 	face18 := truetype.NewFace(font, &truetype.Options{Size: 18})
@@ -258,9 +316,6 @@ func (su *StickerUpdater) Run() error {
 	dc.SetFontFace(face18)
 	dc.DrawStringAnchored(time.Now().Format(time.RFC822), 490, 100, 1, 0.5)
 
-	dc.SetFontFace(face32)
-	dc.DrawStringAnchored("t.me/anon_club", 24, 110, 0, 0)
-
 	mCap, err := strconv.ParseInt(data.Data.Attributes.FdvUsd, 10, 64)
 	if err != nil {
 		mCap = 0
@@ -271,7 +326,8 @@ func (su *StickerUpdater) Run() error {
 
 	templateFileImage := dc.Image()
 	if su.config.DATA_OHLCV_URL != "" {
-		ohlcvData, err := getOHLCVData(su.config.DATA_OHLCV_URL)
+		dataOhlcvURL := strings.Replace(su.config.DATA_OHLCV_URL, "%s", stickerConfig.Address, 1)
+		ohlcvData, err := getOHLCVData(dataOhlcvURL)
 		if err == nil {
 			candles := getCandles(ohlcvData)
 
@@ -308,9 +364,9 @@ func (su *StickerUpdater) Run() error {
 	msg, err := su.bot.SendSticker(context.Background(), &bot.SendStickerParams{
 		ChatID:         su.config.TelegramTargetChatID,
 		ProtectContent: false,
-		Emoji:          "🎱",
+		Emoji:          stickerConfig.Emoji,
 		Sticker: &models.InputFileUpload{
-			Filename: "sticker.jpeg",
+			Filename: "sticker.webp",
 			Data:     bytes.NewReader(buf.Bytes()),
 		},
 	})
@@ -323,7 +379,7 @@ func (su *StickerUpdater) Run() error {
 	su.sender.Lock()
 	defer su.sender.Unlock()
 
-	su.sender.LastStickers["anon"] = msg.Sticker.FileID
+	su.sender.LastStickers[stickerConfig.Name] = msg.Sticker.FileID
 
 	return nil
 }

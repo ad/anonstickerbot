@@ -42,8 +42,8 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 COPY --from=builder /dist /
+COPY tokens /tokens
 COPY config.json /config.json
-COPY stickerAnon.webp /stickerAnon.webp
 ENV SKIP_DOWNLOAD true
 ENV VENDOR_PATH /usr/local/bin
 ENTRYPOINT ["/app"]
