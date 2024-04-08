@@ -19,6 +19,8 @@ type Config struct {
 	TelegramToken        string  `json:"TELEGRAM_TOKEN"`
 	TelegramAdminIDs     string  `json:"TELEGRAM_ADMIN_IDS"`
 	TelegramAdminIDsList []int64 `json:"-"`
+	TelegramTargetChat   string  `json:"TELEGRAM_TARGET_CHAT"`
+	TelegramTargetChatID int64   `json:"-"`
 
 	IMG_IN_PATH string `json:"IMG_IN_PATH"`
 
@@ -57,6 +59,7 @@ func InitConfig(args []string) (*Config, error) {
 		flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
 		flags.StringVar(&config.TelegramToken, "telegramToken", lookupEnvOrString("TELEGRAM_TOKEN", config.TelegramToken), "TELEGRAM_TOKEN")
 		flags.StringVar(&config.TelegramAdminIDs, "telegramAdminIDs", lookupEnvOrString("TELEGRAM_ADMIN_IDS", config.TelegramAdminIDs), "TELEGRAM_ADMIN_IDS")
+		flags.StringVar(&config.TelegramTargetChat, "telegramTargetChat", lookupEnvOrString("TELEGRAM_TARGET_CHAT", config.TelegramTargetChat), "TELEGRAM_TARGET_CHAT")
 
 		flags.StringVar(&config.IMG_IN_PATH, "imgInPath", lookupEnvOrString("IMG_IN_PATH", config.IMG_IN_PATH), "IMG_IN_PATH")
 
@@ -78,6 +81,12 @@ func InitConfig(args []string) (*Config, error) {
 			if chatIDInt, err := strconv.ParseInt(strings.Trim(chatID, "\n\t "), 10, 64); err == nil {
 				config.TelegramAdminIDsList = append(config.TelegramAdminIDsList, chatIDInt)
 			}
+		}
+	}
+
+	if config.TelegramTargetChat != "" {
+		if chatIDInt, err := strconv.ParseInt(strings.Trim(config.TelegramTargetChat, "\n\t "), 10, 64); err == nil {
+			config.TelegramTargetChatID = chatIDInt
 		}
 	}
 

@@ -307,7 +307,7 @@ func (su *StickerUpdater) Run() error {
 	}
 
 	msg, err := su.bot.SendSticker(context.Background(), &bot.SendStickerParams{
-		ChatID:         -4154669576,
+		ChatID:         su.config.TelegramTargetChatID,
 		ProtectContent: false,
 		Emoji:          "🎱",
 		Sticker: &models.InputFileUpload{

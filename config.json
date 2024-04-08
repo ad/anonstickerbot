@@ -17,6 +17,7 @@
     "options": {
         "TELEGRAM_TOKEN": "",
         "TELEGRAM_ADMIN_IDS": "",
+        "TELEGRAM_TARGET_CHAT": "",
         "IMG_IN_PATH": "stickerAnon.webp",
         "DATA_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3?include=dex%2Cdex.network.explorers%2Cdex_link_services%2Cnetwork_link_services%2Cpairs%2Ctoken_link_services%2Ctokens.token_security_metric%2Ctokens.tags&base_token=0",
         "DATA_OHLCV_URL": "https://api.geckoterminal.com/api/v2/networks/ton/pools/EQAjeq_aW_fSP7XqoF15ZZ7zUYiWLqv6UccN-jJlliomy-B3/ohlcv/minute?aggregate=15&limit=24&currency=usd",
@@ -26,6 +27,7 @@
     "schema": {
         "TELEGRAM_TOKEN": "str",
         "TELEGRAM_ADMIN_IDS": "str",
+        "TELEGRAM_TARGET_CHAT": "str",
         "IMG_IN_PATH": "str",
         "DATA_URL": "str",
         "DATA_OHLCV_URL": "str",
