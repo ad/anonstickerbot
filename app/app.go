@@ -47,9 +47,7 @@ func Run(ctx context.Context, w io.Writer, args []string) error {
 		}, sender.SendResult)
 	}
 
-	stickerSetName := fmt.Sprintf("stickers_by_%s", me.Username)
-
-	stickerUpdater, err := su.InitStickerUpdater(lgr, conf, sender.Bot, stickerSetName, me.Username)
+	stickerUpdater, err := su.InitStickerUpdater(lgr, conf, sender.Bot, sender)
 	if err != nil {
 		return err
 	}

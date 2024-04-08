@@ -8,6 +8,7 @@ import (
 
 	"github.com/ad/anonstickerbot/config"
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	bm "github.com/go-telegram/bot/models"
 )
 
@@ -17,6 +18,7 @@ type Sender struct {
 	config           *config.Config
 	Bot              *bot.Bot
 	Config           *config.Config
+	LastStickers     map[string]string
 	deferredMessages map[int64]chan DeferredMessage
 	lastMessageTimes map[int64]int64
 }
@@ -25,6 +27,7 @@ func InitSender(ctx context.Context, logger *slog.Logger, config *config.Config)
 	sender := &Sender{
 		logger:           logger,
 		config:           config,
+		LastStickers:     make(map[string]string),
 		deferredMessages: make(map[int64]chan DeferredMessage),
 		lastMessageTimes: make(map[int64]int64),
 	}
@@ -50,5 +53,31 @@ func InitSender(ctx context.Context, logger *slog.Logger, config *config.Config)
 func (s *Sender) handler(ctx context.Context, b *bot.Bot, update *bm.Update) {
 	if s.config.Debug {
 		s.logger.Debug(formatUpdateForLog(update))
+	}
+
+	if update.InlineQuery == nil {
+		return
+	}
+
+	s.RLock()
+	defer s.RUnlock()
+
+	fileID, ok := s.LastStickers["anon"]
+	if !ok {
+		return
+	}
+
+	results := []models.InlineQueryResult{
+		&models.InlineQueryResultCachedSticker{ID: "1", StickerFileID: fileID},
+	}
+
+	_, err := b.AnswerInlineQuery(ctx, &bot.AnswerInlineQueryParams{
+		InlineQueryID: update.InlineQuery.ID,
+		Results:       results,
+		CacheTime:     0,
+	})
+
+	if err != nil {
+		fmt.Printf("answer inline query error %s\n", err.Error())
 	}
 }
