@@ -1,16 +1,8 @@
-FROM alpine:latest AS webp-builder
-WORKDIR /build
-
-RUN apk add --no-cache --update libpng-dev libjpeg-turbo-dev giflib-dev tiff-dev autoconf automake make gcc g++ wget pkgconfig
-
-RUN wget https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.3.2.tar.gz
-RUN tar -xvzf libwebp-1.3.2.tar.gz
-RUN cd libwebp-1.3.2 && ./configure && make && make install
+FROM danielapatin/go-webp-docker-image:latest AS webp-builder
 
 FROM golang:alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
-RUN apk add --no-cache --update libpng-dev libjpeg-turbo-dev giflib-dev tiff-dev autoconf automake make gcc g++ wget pkgconfig
 
 ARG BUILD_VERSION
 
@@ -38,14 +30,16 @@ COPY --from=webp-builder /usr/lib/libtiff.so.6 /usr/lib/libtiff.so.6
 COPY --from=webp-builder /lib/libz.so.1 /lib/libz.so.1
 COPY --from=webp-builder /usr/lib/libzstd.so.1 /usr/lib/libzstd.so.1
 COPY --from=webp-builder /usr/local/bin/cwebp /usr/local/bin/cwebp
+ENV SKIP_DOWNLOAD true
+ENV VENDOR_PATH /usr/local/bin
+
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 COPY --from=builder /dist /
 COPY tokens /tokens
 COPY config.json /config.json
-ENV SKIP_DOWNLOAD true
-ENV VENDOR_PATH /usr/local/bin
+
 ENTRYPOINT ["/app"]
 
 # Build arguments
