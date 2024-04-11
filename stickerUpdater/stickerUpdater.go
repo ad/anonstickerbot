@@ -334,24 +334,25 @@ func (su *StickerUpdater) updateSticker(stickerConfig *StickerConfig) error {
 		ohlcvData, err := getOHLCVData(dataOhlcvURL)
 		if err == nil {
 			candles := getCandles(ohlcvData)
+			if len(candles) > 0 {
+				imgNRGBA := image.NewNRGBA(image.Rect(0, 0, 512, 512))
+				draw.Draw(imgNRGBA, templateFileImage.Bounds(), templateFileImage, image.Point{0, 0}, draw.Over)
 
-			imgNRGBA := image.NewNRGBA(image.Rect(0, 0, 512, 512))
-			draw.Draw(imgNRGBA, templateFileImage.Bounds(), templateFileImage, image.Point{0, 0}, draw.Over)
+				createAxes(
+					imgNRGBA,
+					candles,
+					Options{
+						YOffset:     300,
+						Width:       512,
+						Height:      512,
+						CandleWidth: 6,
+						Rows:        20,
+						Columns:     20,
+					},
+				)
 
-			createAxes(
-				imgNRGBA,
-				candles,
-				Options{
-					YOffset:     300,
-					Width:       512,
-					Height:      512,
-					CandleWidth: 6,
-					Rows:        20,
-					Columns:     20,
-				},
-			)
-
-			templateFileImage = imgNRGBA
+				templateFileImage = imgNRGBA
+			}
 		}
 	}
 
