@@ -63,6 +63,10 @@ func InitStickerUpdater(logger *slog.Logger, config *config.Config, bot *bot.Bot
 			continue
 		}
 
+		if strings.HasPrefix(dir.Name(), "_") || strings.HasPrefix(dir.Name(), ".") {
+			continue
+		}
+
 		file, err := os.ReadFile(fmt.Sprintf("%s/%s/info.json", config.TOKENS_PATH, dir.Name()))
 		if err != nil {
 			continue
