@@ -2,8 +2,6 @@ package bot
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/go-telegram/bot/models"
 )
@@ -690,8 +688,6 @@ func (b *Bot) UploadStickerFile(ctx context.Context, params *UploadStickerFilePa
 // CreateNewStickerSet https://core.telegram.org/bots/api#createnewstickerset
 func (b *Bot) CreateNewStickerSet(ctx context.Context, params *CreateNewStickerSetParams) (bool, error) {
 	var result bool
-	jsonString, _ := json.Marshal(params)
-	fmt.Println(string(jsonString))
 	err := b.rawRequest(ctx, "createNewStickerSet", params, &result)
 	return result, err
 }
