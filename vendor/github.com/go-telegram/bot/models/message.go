@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // MaybeInaccessibleMessageType https://core.telegram.org/bots/api#maybeinaccessiblemessage
@@ -38,6 +39,17 @@ func (mim *MaybeInaccessibleMessage) UnmarshalJSON(data []byte) error {
 	mim.Type = MaybeInaccessibleMessageTypeMessage
 	mim.Message = &Message{}
 	return json.Unmarshal(data, mim.Message)
+}
+
+func (mim *MaybeInaccessibleMessage) MarshalJSON() ([]byte, error) {
+	switch mim.Type {
+	case MaybeInaccessibleMessageTypeMessage:
+		return json.Marshal(mim.Message)
+	case MaybeInaccessibleMessageTypeInaccessibleMessage:
+		return json.Marshal(mim.InaccessibleMessage)
+	}
+
+	return nil, fmt.Errorf("unsupported MaybeInaccessibleMessage type")
 }
 
 // InaccessibleMessage https://core.telegram.org/bots/api#inaccessiblemessage
@@ -122,6 +134,7 @@ type Message struct {
 	PassportData                  *PassportData                  `json:"passport_data,omitempty"`
 	ProximityAlertTriggered       *ProximityAlertTriggered       `json:"proximity_alert_triggered,omitempty"`
 	BoostAdded                    *ChatBoostAdded                `json:"boost_added,omitempty"`
+	ChatBackgroundSet             *ChatBackground                `json:"chat_background_set,omitempty"`
 	ForumTopicCreated             *ForumTopicCreated             `json:"forum_topic_created,omitempty"`
 	ForumTopicEdited              *ForumTopicEdited              `json:"forum_topic_edited,omitempty"`
 	ForumTopicClosed              *ForumTopicClosed              `json:"forum_topic_closed,omitempty"`
