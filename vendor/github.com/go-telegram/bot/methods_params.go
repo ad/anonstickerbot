@@ -215,6 +215,21 @@ type SendVideoNoteParams struct {
 	ReplyMarkup          models.ReplyMarkup      `json:"reply_markup,omitempty"`
 }
 
+// SendPaidMediaParams https://core.telegram.org/bots/api#sendpaidmedia
+type SendPaidMediaParams struct {
+	ChatID                any                     `json:"chat_id"`
+	StarCount             int                     `json:"star_count"`
+	Media                 []models.InputPaidMedia `json:"media"`
+	Caption               string                  `json:"caption,omitempty"`
+	ParseMode             models.ParseMode        `json:"parse_mode,omitempty"`
+	CaptionEntities       []models.MessageEntity  `json:"caption_entities,omitempty"`
+	ShowCaptionAboveMedia bool                    `json:"show_caption_above_media,omitempty"`
+	DisableNotification   bool                    `json:"disable_notification,omitempty"`
+	ProtectContent        bool                    `json:"protect_content,omitempty"`
+	ReplyParameters       *models.ReplyParameters `json:"reply_parameters,omitempty"`
+	ReplyMarkup           models.ReplyMarkup      `json:"reply_markup,omitempty"`
+}
+
 // SendMediaGroupParams https://core.telegram.org/bots/api#sendmediagroup
 type SendMediaGroupParams struct {
 	BusinessConnectionID string                  `json:"business_connection_id,omitempty"`
@@ -246,7 +261,8 @@ type SendLocationParams struct {
 }
 
 type EditMessageLiveLocationParams struct {
-	ChatID               any                `json:"chat_id"`
+	BusinessConnectionID string             `json:"business_connection_id,omitempty"`
+	ChatID               any                `json:"chat_id,omitempty"`
 	MessageID            int                `json:"message_id,omitempty"`
 	InlineMessageID      string             `json:"inline_message_id,omitempty"`
 	Latitude             float64            `json:"latitude"`
@@ -259,10 +275,11 @@ type EditMessageLiveLocationParams struct {
 }
 
 type StopMessageLiveLocationParams struct {
-	ChatID          any                `json:"chat_id,omitempty"`
-	MessageID       int                `json:"message_id,omitempty"`
-	InlineMessageID string             `json:"inline_message_id,omitempty"`
-	ReplyMarkup     models.ReplyMarkup `json:"reply_markup,omitempty"`
+	BusinessConnectionID string             `json:"business_connection_id,omitempty"`
+	ChatID               any                `json:"chat_id,omitempty"`
+	MessageID            int                `json:"message_id,omitempty"`
+	InlineMessageID      string             `json:"inline_message_id,omitempty"`
+	ReplyMarkup          models.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 // SendVenueParams https://core.telegram.org/bots/api#sendvenue
@@ -665,18 +682,20 @@ type GetMyDefaultAdministratorRightsParams struct {
 
 // EditMessageTextParams https://core.telegram.org/bots/api#editmessagetext
 type EditMessageTextParams struct {
-	ChatID             any                        `json:"chat_id"`
-	MessageID          int                        `json:"message_id,omitempty"`
-	InlineMessageID    string                     `json:"inline_message_id,omitempty"`
-	Text               string                     `json:"text"`
-	ParseMode          models.ParseMode           `json:"parse_mode,omitempty"`
-	Entities           []models.MessageEntity     `json:"entities,omitempty"`
-	LinkPreviewOptions *models.LinkPreviewOptions `json:"link_preview_options,omitempty"`
-	ReplyMarkup        models.ReplyMarkup         `json:"reply_markup,omitempty"`
+	BusinessConnectionID string                     `json:"business_connection_id,omitempty"`
+	ChatID               any                        `json:"chat_id,omitempty"`
+	MessageID            int                        `json:"message_id,omitempty"`
+	InlineMessageID      string                     `json:"inline_message_id,omitempty"`
+	Text                 string                     `json:"text"`
+	ParseMode            models.ParseMode           `json:"parse_mode,omitempty"`
+	Entities             []models.MessageEntity     `json:"entities,omitempty"`
+	LinkPreviewOptions   *models.LinkPreviewOptions `json:"link_preview_options,omitempty"`
+	ReplyMarkup          models.ReplyMarkup         `json:"reply_markup,omitempty"`
 }
 
 type EditMessageCaptionParams struct {
-	ChatID                any                    `json:"chat_id"`
+	BusinessConnectionID  string                 `json:"business_connection_id,omitempty"`
+	ChatID                any                    `json:"chat_id,omitempty"`
 	MessageID             int                    `json:"message_id,omitempty"`
 	InlineMessageID       string                 `json:"inline_message_id,omitempty"`
 	Caption               string                 `json:"caption,omitempty"`
@@ -688,24 +707,27 @@ type EditMessageCaptionParams struct {
 }
 
 type EditMessageMediaParams struct {
-	ChatID          any                `json:"chat_id"`
-	MessageID       int                `json:"message_id,omitempty"`
-	InlineMessageID string             `json:"inline_message_id,omitempty"`
-	Media           models.InputMedia  `json:"media"`
-	ReplyMarkup     models.ReplyMarkup `json:"reply_markup,omitempty"`
+	BusinessConnectionID string             `json:"business_connection_id,omitempty"`
+	ChatID               any                `json:"chat_id,omitempty"`
+	MessageID            int                `json:"message_id,omitempty"`
+	InlineMessageID      string             `json:"inline_message_id,omitempty"`
+	Media                models.InputMedia  `json:"media"`
+	ReplyMarkup          models.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 type EditMessageReplyMarkupParams struct {
-	ChatID          any                `json:"chat_id"`
-	MessageID       int                `json:"message_id,omitempty"`
-	InlineMessageID string             `json:"inline_message_id,omitempty"`
-	ReplyMarkup     models.ReplyMarkup `json:"reply_markup,omitempty"`
+	BusinessConnectionID string             `json:"business_connection_id,omitempty"`
+	ChatID               any                `json:"chat_id,omitempty"`
+	MessageID            int                `json:"message_id,omitempty"`
+	InlineMessageID      string             `json:"inline_message_id,omitempty"`
+	ReplyMarkup          models.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 type StopPollParams struct {
-	ChatID      any                `json:"chat_id"`
-	MessageID   int                `json:"message_id"`
-	ReplyMarkup models.ReplyMarkup `json:"reply_markup,omitempty"`
+	BusinessConnectionID string             `json:"business_connection_id,omitempty"`
+	ChatID               any                `json:"chat_id"`
+	MessageID            int                `json:"message_id"`
+	ReplyMarkup          models.ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 // DeleteMessageParams https://core.telegram.org/bots/api#deletemessage
@@ -894,6 +916,11 @@ type AnswerPreCheckoutQueryParams struct {
 	PreCheckoutQueryID string `json:"pre_checkout_query_id"`
 	OK                 bool   `json:"ok"`
 	ErrorMessage       string `json:"error_message,omitempty"`
+}
+
+type GetStarTransactionsParams struct {
+	Offset int `json:"offset,omitempty"`
+	Limit  int `json:"limit,omitempty"`
 }
 
 type RefundStarPaymentParams struct {
