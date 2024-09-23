@@ -12,6 +12,7 @@ type HandlerType int
 const (
 	HandlerTypeMessageText HandlerType = iota
 	HandlerTypeCallbackQueryData
+	HandlerTypeCallbackQueryGameShortName
 )
 
 type MatchType int
@@ -26,6 +27,7 @@ const (
 )
 
 type handler struct {
+	id          string
 	handlerType HandlerType
 	matchType   MatchType
 	handler     HandlerFunc
@@ -53,6 +55,8 @@ func (h handler) match(update *models.Update) bool {
 			return false
 		}
 		data = update.CallbackQuery.Data
+	case HandlerTypeCallbackQueryGameShortName:
+		data = update.CallbackQuery.GameShortName
 	}
 
 	if h.matchType == MatchTypeExact {
@@ -70,55 +74,58 @@ func (h handler) match(update *models.Update) bool {
 	return false
 }
 
-func (b *Bot) RegisterHandlerMatchFunc(matchFunc MatchFunc, f HandlerFunc) string {
+func (b *Bot) RegisterHandlerMatchFunc(matchFunc MatchFunc, f HandlerFunc, m ...Middleware) string {
 	b.handlersMx.Lock()
 	defer b.handlersMx.Unlock()
 
 	id := RandomString(16)
 
 	h := handler{
+		id:        id,
 		matchType: matchTypeFunc,
 		matchFunc: matchFunc,
-		handler:   f,
+		handler:   applyMiddlewares(f, m...),
 	}
 
-	b.handlers[id] = h
+	b.handlers = append(b.handlers, h)
 
 	return id
 }
 
-func (b *Bot) RegisterHandlerRegexp(handlerType HandlerType, re *regexp.Regexp, f HandlerFunc) string {
+func (b *Bot) RegisterHandlerRegexp(handlerType HandlerType, re *regexp.Regexp, f HandlerFunc, m ...Middleware) string {
 	b.handlersMx.Lock()
 	defer b.handlersMx.Unlock()
 
 	id := RandomString(16)
 
 	h := handler{
+		id:          id,
 		handlerType: handlerType,
 		matchType:   matchTypeRegexp,
 		re:          re,
-		handler:     f,
+		handler:     applyMiddlewares(f, m...),
 	}
 
-	b.handlers[id] = h
+	b.handlers = append(b.handlers, h)
 
 	return id
 }
 
-func (b *Bot) RegisterHandler(handlerType HandlerType, pattern string, matchType MatchType, f HandlerFunc) string {
+func (b *Bot) RegisterHandler(handlerType HandlerType, pattern string, matchType MatchType, f HandlerFunc, m ...Middleware) string {
 	b.handlersMx.Lock()
 	defer b.handlersMx.Unlock()
 
 	id := RandomString(16)
 
 	h := handler{
+		id:          id,
 		handlerType: handlerType,
 		matchType:   matchType,
 		pattern:     pattern,
-		handler:     f,
+		handler:     applyMiddlewares(f, m...),
 	}
 
-	b.handlers[id] = h
+	b.handlers = append(b.handlers, h)
 
 	return id
 }
@@ -127,5 +134,10 @@ func (b *Bot) UnregisterHandler(id string) {
 	b.handlersMx.Lock()
 	defer b.handlersMx.Unlock()
 
-	delete(b.handlers, id)
+	for i, h := range b.handlers {
+		if h.id == id {
+			b.handlers = append(b.handlers[:i], b.handlers[i+1:]...)
+			return
+		}
+	}
 }
