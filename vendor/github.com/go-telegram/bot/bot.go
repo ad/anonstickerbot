@@ -98,6 +98,11 @@ func New(token string, options ...Option) (*Bot, error) {
 	return b, nil
 }
 
+// SetToken sets the bot token
+func (b *Bot) SetToken(token string) {
+	b.token = token
+}
+
 // StartWebhook starts the Bot with webhook mode
 func (b *Bot) StartWebhook(ctx context.Context) {
 	wg := sync.WaitGroup{}
