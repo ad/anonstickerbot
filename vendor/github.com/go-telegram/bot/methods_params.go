@@ -634,6 +634,11 @@ type GetUserChatBoostsParams struct {
 	UserID int `json:"user_id"`
 }
 
+// GetBusinessConnectionParams https://core.telegram.org/bots/api#getbusinessconnection
+type GetBusinessConnectionParams struct {
+	BusinessConnectionID any `json:"business_connection_id"`
+}
+
 type SetMyCommandsParams struct {
 	Commands     []models.BotCommand    `json:"commands"`
 	Scope        models.BotCommandScope `json:"scope,omitempty"`
