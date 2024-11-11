@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.10.1 (2024-11-08)
+
+- Fix arm64 panic (#130) 
+
+## v1.10.0 (2024-10-31)
+
+- support API v7.11
+
+## v1.9.1 (2024-10-21)
+
+- fix unmarshal `ChatBackground` type (#126)
+
+## v1.9.0 (2024-10-17)
+
+- IMPORTANT! New option `WithNotAsyncHandlers` allows to run handlers in the main goroutine. Now, by default, all handlers are run in separate goroutines.
+
+## v1.8.4 (2024-10-10)
+
+- add method GetBusinessConnection (#123)
+
+## v1.8.3 (2024-10-07)
+
+- add function `bot.SetToken`
+- update GitHub action versions
+
 ## v1.8.2 (2024-09-23)
 
 - change field type `FromChatID` from string to any for `ForwardMessageParams`, `ForwardMessagesParams`, `CopyMessageParams` and `CopyMessagesParams` params  

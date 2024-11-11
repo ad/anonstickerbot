@@ -31,6 +31,8 @@ type MatchFunc func(update *models.Update) bool
 
 // Bot represents Telegram Bot main object
 type Bot struct {
+	lastUpdateID     int64
+
 	url                string
 	token              string
 	pollTimeout        time.Duration
@@ -38,6 +40,7 @@ type Bot struct {
 	webhookSecretToken string
 	testEnvironment    bool
 	workers            int
+	notAsyncHandlers   bool
 
 	defaultHandlerFunc HandlerFunc
 
@@ -50,7 +53,6 @@ type Bot struct {
 	handlers   []handler
 
 	client           HttpClient
-	lastUpdateID     int64
 	isDebug          bool
 	checkInitTimeout time.Duration
 
@@ -96,6 +98,11 @@ func New(token string, options ...Option) (*Bot, error) {
 	}
 
 	return b, nil
+}
+
+// SetToken sets the bot token
+func (b *Bot) SetToken(token string) {
+	b.token = token
 }
 
 // StartWebhook starts the Bot with webhook mode
