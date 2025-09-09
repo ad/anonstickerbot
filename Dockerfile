@@ -1,6 +1,6 @@
 FROM danielapatin/go-webp-docker-image:latest AS webp-builder
 
-FROM golang:alpine AS builder
+FROM golang:1.23.0-alpine AS builder
 
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 
