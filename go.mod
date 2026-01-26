@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fogleman/gg v1.3.0
-	github.com/go-telegram/bot v1.17.0
+	github.com/go-telegram/bot v1.18.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/joho/godotenv v1.5.1
 	github.com/nickalie/go-webpbin v0.0.0-20220110095747-f10016bf2dc1
